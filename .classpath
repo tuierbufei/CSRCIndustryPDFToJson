@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="lib/flexjson-2.1.jar"/>
+	<classpathentry kind="lib" path="lib/traprange.lastest.jar"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
