@@ -1,4 +1,5 @@
 package csrcIndustry;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -33,51 +34,70 @@ public class Program {
 		for (int i = 0; i < tables.size(); i++) {
 			Table table = tables.get(i);
 			for (int j = 0; j < table.getRows().size(); j++) {
-				if(i == 0 && j == 0) {
+				if (i == 0 && j == 0) {
 					continue;
 				}
-				
+
 				for (int k = 0; k < table.getRows().get(j).getCells().size(); k++) {
 					content = table.getRows().get(j).getCells().get(k).getContent();
-					if(!content.equals("")) {
-						if(k == 0 && !previousIndustry) {
-							if(currentIndustryName != null && currentIndustryName.indexOf("(") != -1 && currentIndustryName.substring(0, currentIndustryName.indexOf("(")).equals(content)) {
+					if (!content.equals("")) {
+						if (k == 0 && !previousIndustry) {
+							if (currentIndustryName != null && currentIndustryName.indexOf("(") != -1 && currentIndustryName.substring(0, currentIndustryName.indexOf("(")).equals(content)) {
 								continue;
 							}
 							currentIndustryName = content;
-							if(currentIndustryName.indexOf(")") == -1) {
-								if(j == table.getRows().size() - 1) {
-									System.out.println("µÚ" + i + "Ò³ÃÅÀàÃû³Æ£º" +  currentIndustryName + " Î´Íê½á");
+							if (currentIndustryName.indexOf(")") == -1) {
+								if (j == table.getRows().size() - 1) {
+									System.out.println("ç¬¬" + i + "é¡µ " + currentIndustryName + " æœªå®Œç»“");
 								}
+								currentIndustryName += table.getRows().get(j+1).getCells().get(k).getContent();
 								
 								previousIndustry = true;
-								currentIndustryName = currentIndustryName + table.getRows().get(j + 1).getCells().get(k).getContent();
+								
+								if(j == table.getRows().size() - 2 &&  table.getRows().get(j + 1).getCells().get(k).getContent().indexOf(")") == -1) {
+									System.out.println("ç¬¬" + i + "é¡µ " + currentIndustryName + " æœªå®Œç»“");
+								}
+								
+								if(j < table.getRows().size() - 2 && table.getRows().get(j + 1).getCells().get(k).getContent().indexOf(")") == -1){
+									currentIndustryName += table.getRows().get(j+2).getCells().get(k).getContent();
+								}
+								
+								if (!industryHashMap.containsKey(currentIndustryName)) {
+									currentIndustryMap = new LinkedHashMap<String, Map<String, String>>();
+									industryHashMap.put(currentIndustryName, currentIndustryMap);
+									System.out.println(currentIndustryName);
+								}
 							}
-							
-							if(!industryHashMap.containsKey(currentIndustryName)) {
-								currentIndustryMap = new LinkedHashMap<String, Map<String, String>>();
-								industryHashMap.put(currentIndustryName, currentIndustryMap);
-								System.out.println(currentIndustryName);
+						} else if (k == 0 && previousIndustry) {
+							if(table.getRows().get(j).getCells().get(k).getContent().indexOf(")") != -1) {
+								previousIndustry = false;
 							}
-						} else if(k == 0 && previousIndustry) {
-							previousIndustry = false;
 						}
-						
-						if(k == 2) {
-							if(!industriesIndex.contains(content)) {
+
+						if (k == 2) {
+							if (!industriesIndex.contains(content)) {
 								currentCompanyIndustry = new LinkedHashMap<String, String>();
-								currentIndustryMap.put(content + " " + table.getRows().get(j).getCells().get(k+1).getContent(), currentCompanyIndustry);
+								String industryName = table.getRows().get(j).getCells().get(k + 1).getContent();
+								if(content.equals("19")) {
+									int m =0;
+									m=1;
+								}
+								if (table.getRows().get(j + 1).getCells().get(k).getContent().equals("") && !table.getRows().get(j + 1).getCells().get(k + 1).getContent().equals("")) {
+									industryName += table.getRows().get(j + 1).getCells().get(k + 1).getContent();
+								}
+								currentIndustryMap.put(content + " " + industryName, currentCompanyIndustry);
+								industriesIndex.add(content);
 							}
 						}
-						
-						if(k == 4) {
-							currentCompanyIndustry.put(content, table.getRows().get(j).getCells().get( k + 1).getContent());
+
+						if (k == 4) {
+							currentCompanyIndustry.put(content, table.getRows().get(j).getCells().get(k + 1).getContent());
 						}
 					}
 				}
 			}
 		}
-		
+
 		List<Industry> industries = new ArrayList<Industry>();
 		for (String category : industryHashMap.keySet()) {
 			Industry industry = new Industry();
@@ -86,7 +106,7 @@ public class Program {
 			for (String industryName : industryHashMap.get(category).keySet()) {
 				Map<String, String> industryCompanyMap = industryHashMap.get(category).get(industryName);
 				IndustryCompany industryCompany = new IndustryCompany();
-				
+
 				Company[] companies = new Company[industryCompanyMap.size()];
 				int j = 0;
 				for (String stockcd : industryCompanyMap.keySet()) {
@@ -96,7 +116,7 @@ public class Program {
 					companies[j] = company;
 					j++;
 				}
-				
+
 				industryCompany.setName(industryName);
 				industryCompany.setCompanies(companies);
 				industryCompanies[i] = industryCompany;
@@ -106,8 +126,23 @@ public class Program {
 			industry.setIndustries(industryCompanies);
 			industries.add(industry);
 		}
-		
-		JSONSerializer serializer = new JSONSerializer();
+
+		JSONSerializer serializer = new JSONSerializer().prettyPrint(true);
+		// System.out.println(serializer.exclude("*.class").deepSerialize(industries));
+
+		for (int i = 0; i < industries.size(); i++) {
+			if (industries.get(i).category.indexOf("(") != -1) {
+				industries.get(i).category = industries.get(i).category.substring(0, industries.get(i).category.indexOf("("));
+				for (int j = 0; j < industries.get(i).getIndustries().length; j++) {
+					System.out.println(industries.get(i).getIndustries()[j].getName());
+					String[] temp = industries.get(i).getIndustries()[j].getName().split(" ");
+					if (temp.length > 1) {
+						industries.get(i).getIndustries()[j].setName(temp[1]);
+					}
+				}
+			}
+		}
+
 		System.out.println(serializer.exclude("*.class").deepSerialize(industries));
 	}
 }
